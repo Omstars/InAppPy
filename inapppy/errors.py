@@ -10,7 +10,7 @@ class InAppPyValidationError(InAppPyError):
     raw_response = None
     message = None
 
-    def __init__(self, message: str = None, raw_response: dict = None, *args, **kwargs):
+    def __init__(self, message= None, raw_response= None, *args, **kwargs):
         self.raw_response = raw_response
         self.message = message
 

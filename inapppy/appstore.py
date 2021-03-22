@@ -26,10 +26,10 @@ api_result_errors = {
 class AppStoreValidator:
     def __init__(
         self,
-        bundle_id: str = "",
-        sandbox: bool = False,
-        auto_retry_wrong_env_request: bool = False,
-        http_timeout: int = None,
+        bundle_id= "",
+        sandbox= False,
+        auto_retry_wrong_env_request= False,
+        http_timeout= None,
     ):
         """Constructor for AppStoreValidator
 
@@ -53,7 +53,7 @@ class AppStoreValidator:
             else "https://buy.itunes.apple.com/verifyReceipt"
         )
 
-    def _prepare_receipt(self, receipt: str, shared_secret: str, exclude_old_transactions: bool) -> dict:
+    def _prepare_receipt(self, receipt, shared_secret, exclude_old_transactions):
         receipt_json = {"receipt-data": receipt}
 
         if shared_secret:
@@ -64,7 +64,7 @@ class AppStoreValidator:
 
         return receipt_json
 
-    def post_json(self, request_json: dict) -> dict:
+    def post_json(self, request_json):
         self._change_url_by_sandbox()
 
         try:
@@ -72,7 +72,7 @@ class AppStoreValidator:
         except (ValueError, RequestException):
             raise InAppPyValidationError("HTTP error")
 
-    def validate(self, receipt: str, shared_secret: str = None, exclude_old_transactions: bool = False) -> dict:
+    def validate(self, receipt, shared_secret= None, exclude_old_transactions=False):
         """Validates receipt against apple services.
 
         :param receipt: receipt
