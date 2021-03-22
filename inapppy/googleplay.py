@@ -13,7 +13,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 from inapppy.errors import GoogleError, InAppPyError, InAppPyValidationError
 
 
-def make_pem(public_key: str) -> str:
+def make_pem(public_key):
     value = (public_key[i : i + 64] for i in range(0, len(public_key), 64))  # noqa: E203
     return "\n".join(("-----BEGIN PUBLIC KEY-----", "\n".join(value), "-----END PUBLIC KEY-----"))
 
@@ -21,7 +21,7 @@ def make_pem(public_key: str) -> str:
 class GooglePlayValidator:
     purchase_state_ok = 0
 
-    def __init__(self, bundle_id: str, api_key: str, default_valid_purchase_state: int = 0) -> None:
+    def __init__(self, bundle_id, api_key, default_valid_purchase_state=0):
         """
         Arguments:
             bundle_id: str - Also known as Android app's package name. E.g.:
@@ -49,7 +49,7 @@ class GooglePlayValidator:
         except TypeError:
             raise InAppPyValidationError("Bad API key")
 
-    def validate(self, receipt: str, signature: str) -> dict:
+    def validate(self, receipt, signature):
         if not self._validate_signature(receipt, signature):
             raise InAppPyValidationError("Bad signature")
 
@@ -66,7 +66,7 @@ class GooglePlayValidator:
         except (KeyError, ValueError):
             raise InAppPyValidationError("Bad receipt")
 
-    def _validate_signature(self, receipt: str, signature: str) -> bool:
+    def _validate_signature(self, receipt, signature):
         try:
             sig = base64.standard_b64decode(signature)
             return rsa.verify(receipt.encode(), sig, self.public_key)
@@ -77,28 +77,27 @@ class GooglePlayValidator:
 class GoogleVerificationResult:
     """Google verification result class."""
 
-    raw_response: dict = {}
-    is_expired: bool = False
-    is_canceled: bool = False
+    raw_response = {}
+    is_expired = False
+    is_canceled = False
 
-    def __init__(self, raw_response: dict, is_expired: bool, is_canceled: bool):
+    def __init__(self, raw_response, is_expired, is_canceled):
         self.raw_response = raw_response
         self.is_expired = is_expired
         self.is_canceled = is_canceled
 
     def __repr__(self):
         return (
-            f"GoogleVerificationResult("
-            f"raw_response={self.raw_response}, "
-            f"is_expired={self.is_expired}, "
-            f"is_canceled={self.is_canceled})"
-        )
+            "GoogleVerificationResult(raw_response={}{}{})".format(self.raw_response,
+                self.is_expired,
+                self.is_canceled,)
+            )
 
 
 class GooglePlayVerifier:
     DEFAULT_AUTH_SCOPE = "https://www.googleapis.com/auth/androidpublisher"
 
-    def __init__(self, bundle_id: str, play_console_credentials: Union[str, dict], http_timeout: int = 15) -> None:
+    def __init__(self, bundle_id, play_console_credentials, http_timeout=15):
         """
         Arguments:
             bundle_id: str - Also known as Android app's package name.
@@ -111,7 +110,7 @@ class GooglePlayVerifier:
         self.http = self._authorize()
 
     @staticmethod
-    def _ms_timestamp_expired(ms_timestamp: str) -> bool:
+    def _ms_timestamp_expired(ms_timestamp):
         now = datetime.datetime.utcnow()
 
         # Return if it's 0/None, expired.
@@ -127,18 +126,18 @@ class GooglePlayVerifier:
         return datetime.datetime.utcfromtimestamp(ms_timestamp_value) < now
 
     @staticmethod
-    def _create_credentials(play_console_credentials: Union[str, dict], scope_str: str):
+    def _create_credentials(play_console_credentials, scope_str):
         # If str, assume it's a filepath
         if isinstance(play_console_credentials, str):
             if not os.path.exists(play_console_credentials):
-                raise InAppPyError(f"Google play console credentials file does not exist: {play_console_credentials}")
+                raise InAppPyError("Google play console credentials file does not exist: {}".format(play_console_credentials))
             return ServiceAccountCredentials.from_json_keyfile_name(play_console_credentials, scope_str)
         # If dict, assume parsed json
         if isinstance(play_console_credentials, dict):
             return ServiceAccountCredentials.from_json_keyfile_dict(play_console_credentials, scope_str)
         raise InAppPyError(
-            f"Unknown play console credentials format: {repr(play_console_credentials)}, "
-            "expected 'dict' or 'str' types"
+            "Unknown play console credentials format: {}, "
+            "expected 'dict' or 'str' types".format(repr(play_console_credentials))
         )
 
     def _authorize(self):
@@ -147,7 +146,7 @@ class GooglePlayVerifier:
         http = credentials.authorize(http)
         return http
 
-    def check_purchase_subscription(self, purchase_token: str, product_sku: str, service) -> dict:
+    def check_purchase_subscription(self, purchase_token, product_sku, service):
         try:
             purchases = service.purchases()
             subscriptions = purchases.subscriptions()
@@ -162,7 +161,7 @@ class GooglePlayVerifier:
             else:
                 raise e
 
-    def check_purchase_product(self, purchase_token: str, product_sku: str, service) -> dict:
+    def check_purchase_product(self, purchase_token, product_sku, service):
         try:
             purchases = service.purchases()
             products = purchases.products()
@@ -175,7 +174,7 @@ class GooglePlayVerifier:
             else:
                 raise e
 
-    def verify(self, purchase_token: str, product_sku: str, is_subscription: bool = False) -> dict:
+    def verify(self, purchase_token, product_sku, is_subscription= False):
         service = build("androidpublisher", "v3", http=self.http)
 
         if is_subscription:
@@ -199,8 +198,8 @@ class GooglePlayVerifier:
         return result
 
     def verify_with_result(
-        self, purchase_token: str, product_sku: str, is_subscription: bool = False
-    ) -> GoogleVerificationResult:
+        self, purchase_token, product_sku, is_subscription = False
+    ):
         """Verifies by returning verification result instead of raising an error,
         basically it's and better alternative to verify method."""
         service = build("androidpublisher", "v3", http=self.http)
